@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FinTrack - Pengelola Keuangan</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg:#f5f7fb;--card:#fff;--text:#172033;--muted:#718096;
+    --primary:#5b5bd6;--primary2:#7c6ff0;--green:#16a673;--red:#e25555;
+    --border:#e8ebf2;--shadow:0 10px 30px rgba(31,41,55,.07)
+  }
+  body{font-family:Inter,Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--text)}
+  .app{display:flex;min-height:100vh}
+  aside{width:240px;background:#111827;color:#fff;padding:28px 18px;position:fixed;inset:0 auto 0 0}
+  .brand{font-size:22px;font-weight:800;padding:0 12px 30px}
+  .brand span{color:#8b7cf6}
+  nav a{display:flex;gap:12px;align-items:center;color:#b9c1d1;text-decoration:none;padding:13px 14px;border-radius:12px;margin:5px 0}
+  nav a.active,nav a:hover{background:#262d3e;color:#fff}
+  .side-note{position:absolute;bottom:25px;left:18px;right:18px;background:#1d2433;padding:15px;border-radius:14px;color:#aeb7c8;font-size:12px;line-height:1.5}
+  main{margin-left:240px;width:calc(100% - 240px);padding:30px;max-width:1500px}
+  .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:28px}
+  h1{font-size:28px}.subtitle{color:var(--muted);margin-top:5px}
+  .date{background:#fff;border:1px solid var(--border);padding:10px 14px;border-radius:10px;color:var(--muted)}
+  .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:20px;box-shadow:var(--shadow)}
+  .label{color:var(--muted);font-size:13px}.amount{font-size:25px;font-weight:800;margin-top:8px}
+  .green{color:var(--green)}.red{color:var(--red)}.purple{color:var(--primary)}
+  .content{display:grid;grid-template-columns:1.5fr 1fr;gap:20px;margin-top:20px}
+  .section-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+  .section-head h2{font-size:17px}
+  button{border:0;border-radius:10px;padding:10px 15px;cursor:pointer;font-weight:700}
+  .primary{background:var(--primary);color:#fff}.primary:hover{background:#4949c3}
+  .chart{height:270px;display:flex;align-items:end;gap:14px;padding:20px 8px 5px}
+  .bar-wrap{flex:1;height:100%;display:flex;align-items:end;justify-content:center;position:relative}
+  .bar{width:45%;max-width:45px;border-radius:8px 8px 3px 3px;background:linear-gradient(#7c6ff0,#5b5bd6);min-height:5px}
+  .bar-label{position:absolute;bottom:-23px;color:var(--muted);font-size:11px}
+  .legend{display:flex;gap:20px;margin-top:12px;color:var(--muted);font-size:12px}
+  .legend i{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--primary);margin-right:6px}
+  .transactions{margin-top:20px}.table{width:100%;border-collapse:collapse}
+  .table th,.table td{text-align:left;padding:14px 8px;border-bottom:1px solid var(--border);font-size:13px}
+  .table th{color:var(--muted);font-weight:600}.pill{padding:5px 9px;border-radius:99px;font-size:11px;background:#eef0ff;color:var(--primary)}
+  .empty{text-align:center;color:var(--muted);padding:30px}
+  .quick-list{display:grid;gap:12px}.quick{display:flex;justify-content:space-between;align-items:center;padding:13px;background:#fafbff;border:1px solid var(--border);border-radius:12px}
+  .quick small{display:block;color:var(--muted);margin-top:3px}
+  .modal{display:none;position:fixed;inset:0;background:rgba(15,23,42,.55);align-items:center;justify-content:center;padding:20px;z-index:5}
+  .modal.show{display:flex}.modal-box{background:#fff;width:100%;max-width:500px;border-radius:20px;padding:24px}
+  .modal-head{display:flex;justify-content:space-between;margin-bottom:18px}.close{background:#f0f2f6;color:#555;padding:7px 10px}
+  form{display:grid;gap:13px}label{font-size:13px;font-weight:700}input,select{width:100%;padding:12px;border:1px solid var(--border);border-radius:10px;outline:none;background:#fff}
+  input:focus,select:focus{border-color:var(--primary)}
+  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .filter{display:flex;gap:8px}.filter select{width:auto}
+  @media(max-width:1000px){aside{width:75px}.brand{font-size:0}.brand span{font-size:20px}nav a span,.side-note{display:none}main{margin-left:75px;width:calc(100% - 75px)}.cards{grid-template-columns:repeat(2,1fr)}.content{grid-template-columns:1fr}}
+  @media(max-width:650px){main{padding:18px}.cards{grid-template-columns:1fr}.top{align-items:flex-start;gap:12px}.date{display:none}.form-row{grid-template-columns:1fr}.table th:nth-child(3),.table td:nth-child(3){display:none}}
+</style>
+</head>
+<body>
+<div class="app">
+<aside>
+  <div class="brand">Fin<span>Track</span></div>
+  <nav>
+    <a class="active" href="#"><b>⌂</b><span>Dashboard</span></a>
+    <a href="#transaksi"><b>↕</b><span>Transaksi</span></a>
+    <a href="#laporan"><b>▥</b><span>Laporan</span></a>
+  </nav>
+  <div class="side-note">Kelola pemasukan dan pengeluaranmu dengan lebih rapi.</div>
+</aside>
+
+<main>
+  <div class="top">
+    <div>
+      <h1>Dashboard Keuangan</h1>
+      <div class="subtitle">Pantau kondisi keuanganmu hari ini.</div>
+    </div>
+    <div class="date" id="today"></div>
+  </div>
+
+  <section class="cards">
+    <div class="card"><div class="label">Saldo</div><div class="amount purple" id="balance">Rp0</div></div>
+    <div class="card"><div class="label">Pemasukan</div><div class="amount green" id="income">Rp0</div></div>
+    <div class="card"><div class="label">Pengeluaran</div><div class="amount red" id="expense">Rp0</div></div>
+    <div class="card"><div class="label">Jumlah Transaksi</div><div class="amount" id="count">0</div></div>
+  </section>
+
+  <section class="content" id="laporan">
+    <div class="card">
+      <div class="section-head"><h2>Ringkasan Pengeluaran</h2><span class="label">6 bulan terakhir</span></div>
+      <div class="chart" id="chart"></div>
+      <div class="legend"><span><i></i>Pengeluaran</span></div>
+    </div>
+
+    <div class="card">
+      <div class="section-head"><h2>Transaksi Terbaru</h2><button class="primary" onclick="openModal()">+ Tambah</button></div>
+      <div class="quick-list" id="recent"></div>
+    </div>
+  </section>
+
+  <section class="card transactions" id="transaksi">
+    <div class="section-head">
+      <h2>Semua Transaksi</h2>
+      <div class="filter">
+        <select id="filterType" onchange="render()">
+          <option value="all">Semua</option><option value="income">Pemasukan</option><option value="expense">Pengeluaran</option>
+        </select>
+      </div>
+    </div>
+    <table class="table">
+      <thead><tr><th>Tanggal</th><th>Keterangan</th><th>Kategori</th><th>Jenis</th><th>Nominal</th><th></th></tr></thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </section>
+</main>
+</div>
+
+<div class="modal" id="modal">
+  <div class="modal-box">
+    <div class="modal-head"><h2>Tambah Transaksi</h2><button class="close" onclick="closeModal()">✕</button></div>
+    <form id="form">
+      <div class="form-row">
+        <div><label>Tanggal</label><input id="date" type="date" required></div>
+        <div><label>Jenis</label><select id="type"><option value="income">Pemasukan</option><option value="expense">Pengeluaran</option></select></div>
+      </div>
+      <div><label>Keterangan</label><input id="desc" type="text" placeholder="Contoh: Uang saku" required></div>
+      <div><label>Kategori</label><select id="category"><option>Makanan</option><option>Transportasi</option><option>Belanja</option><option>Pendidikan</option><option>Hiburan</option><option>Gaji</option><option>Uang Saku</option><option>Lainnya</option></select></div>
+      <div><label>Nominal (Rp)</label><input id="amount" type="number" min="1" placeholder="50000" required></div>
+      <button class="primary" type="submit">Simpan Transaksi</button>
+    </form>
+  </div>
+</div>
+
+<script>
+const key='fintrack_transactions';
+let data=JSON.parse(localStorage.getItem(key)||'[]');
+
+const rupiah=n=>new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(n);
+const fmtDate=d=>new Date(d+'T00:00:00').toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'});
+document.getElementById('today').textContent=new Date().toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+document.getElementById('date').valueAsDate=new Date();
+
+function save(){localStorage.setItem(key,JSON.stringify(data));}
+function render(){
+  const income=data.filter(x=>x.type==='income').reduce((a,x)=>a+x.amount,0);
+  const expense=data.filter(x=>x.type==='expense').reduce((a,x)=>a+x.amount,0);
+  document.getElementById('income').textContent=rupiah(income);
+  document.getElementById('expense').textContent=rupiah(expense);
+  document.getElementById('balance').textContent=rupiah(income-expense);
+  document.getElementById('count').textContent=data.length;
+
+  const filter=document.getElementById('filterType').value;
+  const rows=[...data].sort((a,b)=>b.date.localeCompare(a.date)).filter(x=>filter==='all'||x.type===filter);
+  document.getElementById('tableBody').innerHTML=rows.length?rows.map(x=>`
+    <tr><td>${fmtDate(x.date)}</td><td><b>${escapeHtml(x.desc)}</b></td><td><span class="pill">${escapeHtml(x.category)}</span></td>
+    <td class="${x.type==='income'?'green':'red'}">${x.type==='income'?'Pemasukan':'Pengeluaran'}</td>
+    <td class="${x.type==='income'?'green':'red'}"><b>${x.type==='income'?'+':'-'} ${rupiah(x.amount)}</b></td>
+    <td><button onclick="removeTx('${x.id}')" style="background:#fff0f0;color:#d44;padding:7px">Hapus</button></td></tr>`).join('')
+  :'<tr><td colspan="6" class="empty">Belum ada transaksi. Tambahkan transaksi pertamamu.</td></tr>';
+
+  const recent=[...data].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,5);
+  document.getElementById('recent').innerHTML=recent.length?recent.map(x=>`
+    <div class="quick"><div><b>${escapeHtml(x.desc)}</b><small>${fmtDate(x.date)} · ${escapeHtml(x.category)}</small></div>
+    <strong class="${x.type==='income'?'green':'red'}">${x.type==='income'?'+':'-'}${rupiah(x.amount)}</strong></div>`).join('')
+    :'<div class="empty">Belum ada transaksi.</div>';
+
+  renderChart();
+}
+function renderChart(){
+  const now=new Date(), months=[];
+  for(let i=5;i>=0;i--){let d=new Date(now.getFullYear(),now.getMonth()-i,1);months.push({m:d.getMonth(),y:d.getFullYear(),label:d.toLocaleDateString('id-ID',{month:'short'})});}
+  const vals=months.map(o=>data.filter(x=>x.type==='expense'&&new Date(x.date+'T00:00:00').getMonth()===o.m&&new Date(x.date+'T00:00:00').getFullYear()===o.y).reduce((a,x)=>a+x.amount,0));
+  const max=Math.max(...vals,1);
+  document.getElementById('chart').innerHTML=vals.map((v,i)=>`<div class="bar-wrap"><div class="bar" title="${rupiah(v)}" style="height:${Math.max(v/max*85,2)}%"></div><div class="bar-label">${months[i].label}</div></div>`).join('');
+}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));}
+function openModal(){document.getElementById('modal').classList.add('show')}
+function closeModal(){document.getElementById('modal').classList.remove('show')}
+function removeTx(id){if(confirm('Hapus transaksi ini?')){data=data.filter(x=>x.id!==id);save();render();}}
+document.getElementById('form').addEventListener('submit',e=>{
+  e.preventDefault();
+  data.push({id:Date.now().toString(),date:date.value,type:type.value,desc:desc.value.trim(),category:category.value,amount:Number(amount.value)});
+  save();render();e.target.reset();date.valueAsDate=new Date();closeModal();
+});
+document.getElementById('modal').addEventListener('click',e=>{if(e.target.id==='modal')closeModal()});
+render();
+</script>
+</body>
+</html>
